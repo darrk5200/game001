@@ -418,13 +418,26 @@ function positionObjective() {
   objectiveEl.style.maxWidth = (stageW * 0.42) + 'px';
 }
 
+// Live objective + full history of every objective seen this playthrough.
+let CURRENT_OBJECTIVE = '';
+const OBJECTIVES = [];
+window.OBJECTIVES = OBJECTIVES;
+
 function setObjective(text) {
+  CURRENT_OBJECTIVE = text || '';
+  if (text) {
+    const last = OBJECTIVES[OBJECTIVES.length - 1];
+    if (!last || last.text !== text) OBJECTIVES.push({ text, done: false, at: Date.now() });
+  } else {
+    OBJECTIVES.forEach(o => { o.done = true; });
+  }
   if (!objectiveEl) return;
   if (!text) { objectiveEl.classList.remove('show'); return; }
   objectiveTextEl.textContent = text;
   objectiveEl.classList.add('show');
   positionObjective();
 }
+
 
 
 function positionSceneControls() {
