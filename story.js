@@ -11,8 +11,8 @@
 const SCENES = {
   'scene-1': {
     background: 'assets/room1.png',
-    spawn: { col: 23, row: 9 },
-    walkable: "C6R6C7R6C8R6C6R7C7R7C8R7C6R8C7R8C8R8C6R9C7R9C8R9C6R10C7R10C8R10C6R11C7R11C8R11C6R12C7R12C8R12C6R13C7R13C8R13C6R14C7R14C8R14C6R15C7R15C8R15C9R15C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C20R15C21R15C22R15C23R15C24R15C25R15C26R15C27R15C9R7C9R8C9R9C9R10C9R11C9R12C9R13C9R14C6R5C4R7C5R7C9R7C10R7C11R7C12R7C13R7C14R7C15R7C16R7C17R7C18R7C19R7C20R7C21R7C22R7C23R7C24R7C25R7C26R7C27R7C9R8C10R8C11R8C12R8C13R8C14R8C15R8C16R8C17R8C18R8C19R8C20R8C21R8C22R8C23R8C24R8C25R8C26R8C27R8C11R6C12R6C13R6C14R6C15R6C16R6C17R6C18R6C19R6C20R6C21R6C16R5C17R5C18R5C19R5C20R5C21R5C17R4C18R4C19R4C21R5C21R6C21R7C21R8C20R7C21R7C22R7C23R7C24R7C25R7C26R7C20R8C21R8C22R8C23R8C24R8C25R8C26R8C17R14C18R14C19R14C20R14C21R14C22R14C23R14C24R14C25R14C16R6C17R6C18R6C19R6C20R6C16R7C17R7C18R7C19R7C20R7C16R8C17R8C18R8C19R8C20R8C16R9C17R9C18R9C19R9C20R9C16R10C17R10C18R10C19R10C20R10C16R11C17R11C18R11C19R11C20R11C16R12C17R12C18R12C19R12C20R12C17R13C18R13C19R13C20R13C17R14C18R14C19R14C20R14C21R9C22R9C23R9C24R9C13R13C14R13C13R14C14R14C13R10C13R11C13R12C10R9C11R9C12R9C10R12C11R12C12R12C13R12C13R9C13R10C13R11C13R12",
+    spawn: { col: 10, row: 10 },
+    walkable: "C14R8C15R8C16R8C17R8C14R9C15R9C16R9C17R9C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C10R11C11R11C12R11C13R11C14R11C15R11C16R11C17R11C10R12C11R12C12R12C13R12C14R12C15R12C16R12C17R12C10R13C11R13C12R13C13R13C14R13C15R13C16R13C17R13C10R14C11R14C12R14C13R14C14R14C15R14C16R14C17R14C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C8R12C9R12C8R13C9R13C8R14C9R14C8R15C9R15C3R12C4R12C5R12C6R12C7R12C3R13C4R13C5R13C6R13C7R13C12R16C13R16C14R16C15R16C16R16C17R16C18R16C18R10C19R10C18R11C19R11C18R12C19R12C18R13C19R13C18R14C19R14C18R15C19R15C25R10C25R11C25R12C25R13C25R14C25R15C19R10",
 
     // Interact-cells: standing on any cell in `cells` shows the interact icon
     // at the `icon` cell. Press E to open that interaction's dialogue.
@@ -21,67 +21,29 @@ const SCENES = {
     interacts: [
       // Computer desk
       {
-        cells: "C9R7C10R7",
+        cells: "C19R10",
         icon: "C10R4",
         lines: [
           {
-            speaker: 'narrator',
+            speaker: "narrator",
             text: "Would you like to use your computer?",
             choices: [
-              { label: 'Yes', action: 'computer' },
-              { label: 'No' },
+              { label: "Yes", action: "computer" },
+              { label: "No" },
             ],
           },
         ],
       },
       {
-        cells: "C22R7C23R7C24R7",
+        cells: "C25R14C25R15",
         icon: "C23R3",
         lines: [
-          { speaker: 'narrator', text: "Your closet is full of clothes, hanging there since the ancient ages" },
-          { speaker: 'narrator', text: "You do not feel like dressing fancy today" },
+          { speaker: "narrator", text: "Your closet is full of clothes, hanging there since the ancient ages" },
+          { speaker: "narrator", text: "You do not feel like dressing fancy today" },
         ],
       },
-      {
-        cells: "C6R10C6R11C6R12",
-        icon: "C4R10",
-        lines: [
-          { speaker: 'narrator', text: "The power's out, nothing but your reflection on the TV screen" },
-        ],
-        // Shown on every interaction after the first one.
-        repeatLines: [
-          { speaker: 'narrator', text: "You can't really watch the TV with the electricity gone" },
-
-        ],
-      },
-      { cells: "C13R16C14R16C15R16C16R16C17R16", icon: "C15R17", lines: [] },
-      // Balcony doorway — asks before travelling
-      {
-        cells: "C13R15C14R15C15R15C16R15C17R15",
-        icon: "C15R13",
-        lines: [
-          {
-            speaker: 'narrator',
-            text: "Visit the balcony?",
-            choices: [
-              { label: 'Yes', goto: 'scene-1.5' },
-              { label: 'No' },
-            ],
-          },
-        ],
-      },
-      // Doorway → common room
-      { cells: "C17R4C18R4C19R4", icon: "C18R2", goto: 'scene-2' },
-      {
-        cells: "C6R5C7R6",
-        icon: "C7R3",
-        lines: [
-          { speaker: 'narrator', text: "A plastic flower, the pot painted over by a child's hand, mostly pink." },
-          { speaker: 'narrator', text: "There's a name scratched into the rim, \"JUNE & JULY\". The ampersand is backwards." },
-          { speaker: 'july', sprite: 'july_idle', text: "She was 7. She said fake flowers are better because they don't die if nobody flowers them. A line she heard on the TV." },
-
-        ],
-      },
+      // Doorway to roomways
+      { cells: "C15R16C16R16", icon: "C18R2", goto: "scene-1.5", at: 'C6R15' },
     ],
   },
 
@@ -90,12 +52,14 @@ const SCENES = {
 SCENES['scene-2'] = {
   background: 'assets/commonroom.png',
   spawn: { col: 3, row: 11 },
-  walkable: "C5R8C6R8C7R8C8R8C9R8C10R8C11R8C12R8C5R9C6R9C7R9C8R9C9R9C10R9C11R9C12R9C5R10C6R10C7R10C8R10C9R10C10R10C11R10C12R10C13R8C14R8C15R8C16R8C17R8C18R8C19R8C20R8C21R8C22R8C23R8C24R8C25R8C26R8C13R9C14R9C15R9C16R9C17R9C18R9C19R9C20R9C21R9C22R9C23R9C24R9C25R9C26R9C20R7C21R7C22R7C23R7C24R7C25R7C26R7C7R6C8R6C7R7C8R7C5R7C6R7C23R10C24R10C23R11C24R11C23R12C24R12C23R13C24R13C23R14C24R14C23R15C24R15C25R12C26R12C27R12C28R12C29R12C25R13C26R13C27R13C28R13C29R13C25R14C26R14C27R14C28R14C29R14C25R15C26R15C27R15C28R15C29R15C27R10C27R11C28R11C29R11C20R13C21R13C22R13C23R13C24R13C25R13C26R13C27R13C28R13C29R13C20R14C21R14C22R14C23R14C24R14C25R14C26R14C27R14C28R14C29R14C20R15C21R15C22R15C23R15C24R15C25R15C26R15C27R15C28R15C29R15C2R15C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C2R13C3R13C4R13C5R13C6R13C7R13C8R13C9R13C10R13C2R14C3R14C4R14C5R14C6R14C7R14C8R14C9R14C10R14C2R15C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C4R10C5R10C6R10C7R10C4R11C5R11C6R11C7R11C4R12C5R12C6R12C7R12C2R11C3R11C4R11C5R11C2R12C3R12C4R12C5R12C2R13C3R13C4R13C5R13C2R14C3R14C4R14C5R14C2R15C3R15C4R15C5R15C5R13C6R13C7R13C8R13C9R13C10R13C5R14C6R14C7R14C8R14C9R14C10R14C12R16C13R16C14R16C15R16C16R16C17R16C18R16",
+  walkable: "C5R8C6R8C7R8C8R8C9R8C10R8C11R8C12R8C5R9C6R9C7R9C8R9C9R9C10R9C11R9C12R9C5R10C6R10C7R10C8R10C9R10C10R10C11R10C12R10C13R8C14R8C15R8C16R8C17R8C18R8C19R8C20R8C21R8C22R8C13R9C14R9C15R9C16R9C17R9C18R9C19R9C20R9C21R9C22R9C20R7C21R7C22R7C7R6C8R6C7R7C8R7C5R7C6R7C23R10C24R10C25R10C26R10C27R10C23R11C24R11C25R11C26R11C27R11C23R12C24R12C23R13C24R13C23R14C24R14C23R15C24R15C25R12C26R12C27R12C28R12C29R12C25R13C26R13C27R13C28R13C29R13C25R14C26R14C27R14C28R14C29R14C25R15C26R15C27R15C28R15C29R15C27R10C27R11C28R11C29R11C20R13C21R13C22R13C23R13C24R13C25R13C26R13C27R13C28R13C29R13C20R14C21R14C22R14C23R14C24R14C25R14C26R14C27R14C28R14C29R14C20R15C21R15C22R15C23R15C24R15C25R15C26R15C27R15C28R15C29R15C2R15C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C2R13C3R13C4R13C5R13C6R13C7R13C8R13C9R13C10R13C2R14C3R14C4R14C5R14C6R14C7R14C8R14C9R14C10R14C2R15C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C4R10C5R10C6R10C7R10C4R11C5R11C6R11C7R11C4R12C5R12C6R12C7R12C2R11C3R11C4R11C5R11C2R12C3R12C4R12C5R12C2R13C3R13C4R13C5R13C2R14C3R14C4R14C5R14C2R15C3R15C4R15C5R15C5R13C6R13C7R13C8R13C9R13C10R13C5R14C6R14C7R14C8R14C9R14C10R14C12R16C13R16C14R16C15R16C16R16C17R16C18R16",
   // Static characters/objects drawn in the scene at a given cell.
   props: [],
   interacts: [
     // Back to your room
     { cells: "C3R11C4R11", icon: "C3R9", goto: 'scene-1', at: 'C18R4' },
+    // Back to roomways
+    { cells: "C24R10C25R10C26R10", icon: "C25R8", goto: 'scene-1.5', at: 'C15R19' },
 
     // ── The knock at the door (one-shot cutscene) ──
     {
@@ -126,11 +90,17 @@ SCENES['scene-2'] = {
                 {
                   label: "Yeah, you went to bed at 11",
                   flags: { covered_for_june: true },
-                  lines: [
-                    { speaker: 'june', sprite: 'june_smile', text: "Thanks!!" },
-                    { speaker: 'narrator', text: "She says it too fast, like she's paying for something." },
-                    { speaker: 'july', sprite: 'july_idle', text: "That's the 4th lie I'm holding for you this month. I'm keeping count" },
-                    { speaker: 'june', sprite: 'june_upset', text: "How about you don't keep that count then" },
+                  script: [
+                    {
+                      dialog: [
+                        { speaker: 'june', sprite: 'june_smile', text: "Thanks!!" },
+                        { speaker: 'narrator', text: "She says it too fast, like she's paying for something." },
+                        { speaker: 'july', sprite: 'july_idle', text: "That's the 4th lie I'm holding for you this month. I'm keeping count" },
+                        { speaker: 'june', sprite: 'june_upset', text: "How about you don't keep that count then." },
+                        { speaker: 'june', sprite: 'june_upset', text: "Well, I'm off to get some food" },
+                      ],
+                    },
+                    { if: { flag: 'tried_kitchen' }, then: { dialog: [{ speaker: 'narrator', text: "Maybe now IS the time to get some food" }] } },
                   ],
                 },
                 {
@@ -149,60 +119,68 @@ SCENES['scene-2'] = {
             },
           ],
         },
-        // June walks off to her room while the narration plays.
+        // June walks off to the kitchen while the narration plays.
         {
           parallel: [
-            { dialog: [{ speaker: 'narrator', text: "And there she goes again, locked up in her room." }] },
+            { dialog: [{ speaker: 'narrator', text: "And there she goes, into the kitchen" }] },
             { actorPath: { id: 'june', path: ['C16R15', 'C27R15', 'C27R12', 'C28R12', 'C28R10'] } },
           ],
         },
         { removeActor: 'june' },
       ],
     },
+    // Kitchen doorway
+    {
+      cells: "C27R10C27R11C28R11",
+      icon: "C27R9",
+      once: false,
+      script: [
+        {
+          if: { flag: 'objective_1' },
+          then: { goto: 'scene-3' },
+          else: {
+            parallel: [
+              { flags: { tried_kitchen: true } },
+              { dialog: [{ speaker: 'narrator', text: "Now is not the time to get some food. That's the kitchen" }] },
+            ],
+          },
+        },
+      ],
+    },
   ],
-
-
 
 };
 
-// ── Balcony ───────────────────────────────
+// ── Kitchen ──
+SCENES['scene-3'] = {
+  background: 'assets/kitchen.png',
+  spawn: { col: 3, row: 11 },
+  walkable: "C5R8C6R8C7R8C8R8C9R8C10R8C11R8C12R8C13R8C14R8C15R8C16R8C17R8C18R8C19R8C20R8C21R8C22R8C23R8C24R8C25R8C26R8C27R8C5R9C6R9C7R9C8R9C9R9C10R9C11R9C12R9C13R9C14R9C15R9C16R9C17R9C18R9C19R9C20R9C21R9C22R9C23R9C24R9C25R9C26R9C27R9C5R10C6R10C7R10C8R10C9R10C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C18R10C19R10C20R10C21R10C22R10C23R10C24R10C25R10C26R10C27R10C4R10C5R10C6R10C7R10C8R10C9R10C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C18R10C19R10C20R10C21R10C22R10C23R10C24R10C25R10C26R10C27R10C3R11C4R11C2R11C3R11C4R11C5R11C6R11C2R12C3R12C4R12C5R12C6R12C2R13C3R13C4R13C5R13C6R13C2R14C3R14C4R14C5R14C6R14C2R15C3R15C4R15C5R15C6R15C6R11C7R11C8R11C8R14C9R14C10R14C8R15C9R15C10R15C2R15C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C20R15C21R15C22R15C23R15C24R15C25R15C26R15C27R15C28R15C29R15C12R16C13R16C14R16C15R16C16R16C17R16C18R16C19R16C21R14C13R14C14R14C17R14C18R14C23R14C24R14C25R14C26R14C27R14C28R14C29R14C24R9C25R9C26R9C27R9C24R10C25R10C26R10C27R10C24R11C25R11C26R11C27R11C24R12C25R12C26R12C27R12C24R13C25R13C26R13C27R13C24R14C25R14C26R14C27R14C28R12C29R12C28R13C29R13C28R14C29R14C28R15C29R15",
+  props: [
+    { cell: 'C6R8', sprite: 'june_idle' },
+  ],
+  interacts: [],
+};
+
+// ── Roomways (hallway between July's and June's rooms) ──
 SCENES['scene-1.5'] = {
-  background: 'assets/balcony.png',
-  // Rendered at 60% of the stage-fitted size.
-  fitScale: 0.6,
-  spawn: { col: 15, row: 14 },
-  walkable: "C7R9C8R9C9R9C10R9C11R9C12R9C13R9C14R9C15R9C16R9C17R9C18R9C19R9C20R9C21R9C22R9C23R9C24R9C7R10C8R10C9R10C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C18R10C19R10C20R10C21R10C22R10C23R10C24R10C7R11C8R11C9R11C10R11C11R11C12R11C13R11C14R11C15R11C16R11C17R11C18R11C19R11C20R11C21R11C22R11C23R11C24R11C7R12C8R12C9R12C10R12C11R12C12R12C13R12C14R12C15R12C16R12C17R12C18R12C19R12C20R12C21R12C22R12C23R12C24R12C7R13C8R13C9R13C10R13C11R13C12R13C13R13C14R13C15R13C16R13C17R13C18R13C19R13C20R13C21R13C22R13C23R13C24R13C4R11C5R11C6R11C4R12C5R12C6R12C4R13C5R13C6R13C25R11C26R11C27R11C25R12C26R12C27R12C25R13C26R13C27R13C9R14C10R14C11R14C12R14C13R14C14R14C15R14C16R14C17R14C18R14C19R14C20R14C21R14C22R14",
+  background: 'assets/roomways.png',
+  spawn: { col: 16, row: 16 },
+  walkable: "C3R15C4R15C5R15C6R15C7R15C8R15C9R15C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C20R15C21R15C22R15C23R15C24R15C25R15C26R15C27R15C28R15C3R16C4R16C5R16C6R16C7R16C8R16C9R16C10R16C11R16C12R16C13R16C14R16C15R16C16R16C17R16C18R16C19R16C20R16C21R16C22R16C23R16C24R16C25R16C26R16C27R16C28R16C29R16C2R17C3R17C4R17C5R17C6R17C7R17C8R17C9R17C10R17C11R17C12R17C13R17C14R17C15R17C16R17C17R17C18R17C19R17C20R17C21R17C22R17C23R17C24R17C25R17C26R17C27R17C28R17C29R17C2R18C3R18C4R18C5R18C6R18C7R18C8R18C9R18C10R18C11R18C12R18C13R18C14R18C15R18C16R18C17R18C18R18C19R18C20R18C21R18C22R18C23R18C24R18C25R18C26R18C27R18C28R18C29R18C11R19C12R19C13R19C14R19C15R19C16R19C17R19C18R19",
   interacts: [
-    // Jump off the balcony prompt
+    // July's door — back to your room
+    { cells: "C5R15C6R15C7R15", icon: "C6R7", goto: 'scene-1', at: 'C15R16' },
+    // June's door — locked
     {
-      cells: "C12R9C13R9C14R9C15R9C16R9C17R9C18R9C19R9",
-      icon: "C15R7",
+      cells: "C24R15C25R15C26R15",
+      icon: "C25R7",
       lines: [
-        {
-          speaker: 'narrator',
-          text: "Jump off the balcony?",
-          choices: [
-            { label: 'Yes' },
-            { label: 'No' },
-          ],
-        },
+        { speaker: 'narrator', text: "June's room. The door is shut." },
+        { speaker: 'narrator', text: "Better not." },
       ],
     },
-    // Step back inside
-    {
-      cells: "C12R14C13R14C14R14C15R14C16R14C17R14C18R14C19R14",
-      icon: "C15R12",
-      lines: [
-        {
-          speaker: 'narrator',
-          text: "Return to your room?",
-          choices: [
-            { label: 'Yes', goto: 'scene-1', at: 'C15R15' },
-            { label: 'No' },
-          ],
-        },
-      ],
-    },
+    // Doorway to common room
+    { cells: "C13R19C14R19C15R19C16R19", icon: "C15R18", goto: 'scene-2', at: 'C25R10' },
   ],
 };
 
