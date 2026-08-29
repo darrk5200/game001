@@ -175,10 +175,14 @@ function walkPlayerTo(cellStr, done) {
 function runScript(steps, done, startIndex) {
   cutscene = true;
   keys.up = keys.down = keys.left = keys.right = false;
+  // Nested scripts (e.g. a dialogue choice's script) must not clobber the
+  // parent cutscene — remember it and restore when the nested one finishes.
+  const parent = activeScript;
   activeScript = {
     steps: Array.isArray(steps) ? steps : [],
     index: Math.max(0, Number(startIndex) || 0),
     done: done || null,
+    parent: parent || null,
   };
   continueActiveScript();
 }
@@ -188,13 +192,16 @@ function continueActiveScript() {
   const steps = activeScript.steps || [];
   if (activeScript.index >= steps.length) {
     const done = activeScript.done;
-    activeScript = null;
-    cutscene = false;
+    const parent = activeScript.parent;
+    activeScript = parent || null;
+    cutscene = !!parent;
     if (done) done();
+    else if (parent) continueActiveScript();
     return;
   }
   runStep(steps[activeScript.index++], continueActiveScript);
 }
+
 
 function resumeScriptFromSnapshot(resume) {
   if (!resume || resume.type !== 'script' || !Array.isArray(resume.steps)) return;
@@ -209,6 +216,13 @@ function runStep(s, next) {
     if (!n) { next(); return; }
     const fin = () => { if (--n === 0) next(); };
     s.parallel.forEach(st => runStep(st, fin));
+    return;
+  }
+  if (s.if) {
+    const result = s.if.flag ? !!FLAGS[s.if.flag] : false;
+    const branch = result ? s.then : s.else;
+    if (branch) { runStep(branch, next); }
+    else { next(); }
     return;
   }
   if (s.playerTo) { walkPlayerTo(s.playerTo, next); return; }
@@ -940,6 +954,7 @@ function pickChoice() {
   closeDialog();
   if (opt && opt.action === 'computer') { if (cb) cb(); openComputer(); }
   else if (opt && opt.goto) { if (cb) cb(); changeScene(opt.goto, opt.at); }
+  else if (opt && opt.script && opt.script.length) runScript(opt.script, cb);
   else if (opt && opt.lines && opt.lines.length) openDialog({ lines: opt.lines }, cb);
   else if (cb) cb();
 }
