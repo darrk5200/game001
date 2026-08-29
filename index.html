@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Quest — Pixel RPG Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #111; overflow: hidden; }
+    #canvas { display: block; image-rendering: pixelated; touch-action: none; }
+    #canvas.cell-selecting { cursor: crosshair; }
+
+    /* ── Interaction prompt ── */
+    /* ── Objective HUD ── */
+    #objective {
+      position: fixed;
+      display: none;
+      max-width: 34%;
+      background: rgba(0,0,0,0.62);
+      border: 2px solid rgba(255,255,255,0.35);
+      color: #f2f4ff;
+      font-family: 'Courier New', monospace;
+      padding: 8px 12px;
+      line-height: 1.35;
+      text-shadow: 2px 2px 0 #000;
+      pointer-events: none;
+      z-index: 40;
+    }
+    #objective.show { display: block; }
+    #objective .obj-title {
+      color: #ffd479;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    #interact-hint {
+
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -130%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 6px 12px;
+      border: 2px solid #ffcc00;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+    }
+
+    /* ── RPGMaker-style dialog window (anchored inside the game canvas) ── */
+    #dialog {
+      position: fixed;
+      display: none;
+      z-index: 20;
+      font-family: 'Courier New', monospace;
+      color: #f2f4ff;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      tap-highlight-color: transparent;
+      image-rendering: pixelated;
+    }
+    #dialog.open { display: block; }
+
+    /* Character portraits flanking the dialogue window */
+    #dialog .dialog-portrait {
+      position: absolute;
+      bottom: 100%;
+      margin-bottom: -6px;
+      height: 260px;
+      max-height: 42vh;
+      image-rendering: pixelated;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .18s ease, filter .18s ease, transform .18s ease;
+    }
+    #dialog .dialog-portrait.show { opacity: 1; }
+    #dialog .dialog-portrait.dim { opacity: .75; filter: brightness(.55); transform: scale(.94); }
+    #dialog .dialog-portrait.left  { left: 2%; transform-origin: bottom left; }
+    #dialog .dialog-portrait.right { right: 2%; transform-origin: bottom right; }
+
+    @media (max-width: 640px) {
+      #dialog .dialog-portrait {
+        height: 160px;
+        max-height: 32vh;
+        margin-bottom: -4px;
+      }
+      #dialog .dialog-portrait.left  { left: 0; }
+      #dialog .dialog-portrait.right { right: 0; }
+    }
+
+
+    #dialog .dialog-window {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.62);
+      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 6px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 4px 18px rgba(0,0,0,0.45);
+      backdrop-filter: blur(2px);
+      padding: 14px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Name plate sits on top-left edge of the window, RPGMaker MZ style */
+    #dialog .dialog-nameplate {
+      position: absolute;
+      top: -18px;
+      left: 14px;
+      display: none;
+      padding: 4px 14px;
+      background: rgba(0,0,0,0.75);
+      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 5px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.75);
+      white-space: nowrap;
+    }
+    #dialog.has-name .dialog-nameplate { display: block; }
+
+    #dialog .dialog-text {
+      font-family: 'Chewy', 'Arial Black', sans-serif;
+      font-size: 56px;
+      line-height: 1.35;
+      word-spacing: 0.15em;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.7);
+      white-space: pre-wrap;
+      width: 100%;
+    }
+
+    /* Blinking "continue" arrow at the bottom of the window */
+    #dialog .dialog-arrow {
+      position: absolute;
+      right: 16px;
+      bottom: 8px;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 9px solid rgba(200,220,255,0.9);
+      opacity: 0;
+      animation: dialogArrow 0.9s steps(1, end) infinite;
+    }
+    #dialog.ready .dialog-arrow { opacity: 1; }
+
+    /* ── Choice list (Yes / No prompts) ── */
+    #dialog .dialog-choices {
+      display: none;
+      margin-top: 10px;
+      gap: 8px;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+    #dialog.has-choices .dialog-choices { display: flex; }
+    #dialog.has-choices .dialog-window { height: auto; min-height: 100%; }
+    #dialog.has-choices .dialog-arrow { display: none; }
+    #dialog .dialog-choice {
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.2;
+      color: #f2f4ff;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 5px;
+      padding: 6px 18px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-align: left;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.7);
+      flex: 0 0 auto;
+    }
+    #dialog .dialog-choice.selected {
+      border-color: rgba(200,220,255,0.95);
+      background: rgba(60,80,130,0.7);
+    }
+    @keyframes dialogArrow {
+      0%, 49%   { transform: translateY(0); }
+      50%, 100% { transform: translateY(4px); }
+    }
+
+    /* ── Mobile D-pad ── */
+    #dpad {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      width: 138px;
+      height: 138px;
+      display: none;
+      z-index: 15;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .dpad-btn {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.35);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dpad-btn:active, .dpad-btn.pressed {
+      background: rgba(255,255,255,0.35);
+      border-color: rgba(255,255,255,0.7);
+    }
+    #dpad-up    { top: 0;    left: 48px; }
+    #dpad-left  { top: 48px; left: 0;    }
+    #dpad-center{ top: 48px; left: 48px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+    #dpad-right { top: 48px; left: 96px; }
+    #dpad-down  { top: 96px; left: 48px; }
+
+    /* ── Mobile E button ── */
+    #btn-e {
+      position: fixed;
+      bottom: 60px;
+      right: 24px;
+      width: 54px;
+      height: 54px;
+      background: rgba(102,153,204,0.25);
+      border: 2px solid rgba(102,153,204,0.6);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      z-index: 15;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-e:active { background: rgba(102,153,204,0.5); }
+
+    /* ── Dev tools ── */
+    #dev-tools {
+      position: fixed;
+      top: 8px;
+      right: 12px;
+      z-index: 25;
+      width: 190px;
+      color: rgba(255,255,255,0.9);
+      font-family: monospace;
+      font-size: 11px;
+    }
+    #dev-label {
+      display: block;
+      color: rgba(255,200,80,0.9);
+      background: rgba(0,0,0,0.68);
+      padding: 4px 6px;
+      border-radius: 3px;
+      text-align: right;
+    }
+    #cell-selector {
+      margin-top: 6px;
+      background: rgba(10,10,20,0.9);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 5px;
+      padding: 8px;
+    }
+    #cell-selector label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: bold;
+    }
+    #cell-selector input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: #66ccff;
+      cursor: pointer;
+    }
+    #cell-selector-help {
+      margin-top: 5px;
+      color: rgba(210,225,240,0.72);
+      line-height: 1.4;
+    }
+    #grid-outputs {
+      margin-top: 6px;
+      background: rgba(10,10,20,0.9);
+      border: 1px solid rgba(102,204,255,0.45);
+      border-radius: 5px;
+      padding: 8px;
+      display: none;
+    }
+    #grid-outputs.visible {
+      display: block;
+    }
+    #grid-outputs-title {
+      color: #66ccff;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    #grid-outputs-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+    .grid-output {
+      color: #07111a;
+      background: #9de5ff;
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    #grid-outputs-empty {
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── Save / Load controls ── */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; background: #07080d; color: #e8e8f0;
+      font-family: 'Chewy', cursive; letter-spacing: 3px;
+      transition: opacity .35s ease;
+    }
+    #loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+    #scene-fade {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+      z-index: 60;
+    }
+    #scene-fade.active { opacity: 1; }
+    #loading-title { font-size: 18px; }
+    #load-bar {
+      width: min(360px, 60vw); height: 12px;
+      border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.06);
+    }
+    #load-bar-fill { height: 100%; width: 0%; background: #fff; transition: width .2s ease; }
+    #load-pct { font-size: 13px; opacity: .8; }
+    #scene-controls {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      z-index: 22;
+      font-family: 'Courier New', monospace;
+    }
+    .scene-btn {
+      box-sizing: border-box;
+      height: 38px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10,10,30,0.9);
+      border: 2px solid #6699cc;
+      border-radius: 6px;
+      color: #dbeaff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      padding: 0 22px;
+      cursor: pointer;
+    }
+    .scene-btn:hover { background: rgba(40,70,120,0.95); color: #fff; }
+
+    /* ── Save / Load overlay ── */
+    #slots-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 70;
+      font-family: 'Courier New', monospace;
+    }
+    #slots-overlay.open { display: flex; }
+
+    /* ── Computer screen view ── */
+    #computer-view {
+      position: fixed;
+      display: none;
+      z-index: 30;
+      background: #000;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+    #computer-view.open { display: block; }
+    #computer-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      display: block;
+    }
+    #computer-exit {
+      position: absolute;
+      left: 3%;
+      bottom: 4%;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(2px);
+      border: 2px solid #6699cc;
+      border-radius: 6px;
+      color: #dbeaff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 10px 24px;
+      cursor: pointer;
+    }
+    #computer-exit:hover { background: rgba(40,70,120,0.95); color: #fff; }
+    #slots-panel {
+      width: min(760px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #000;
+      border: 3px solid #ffcc00;
+      border-radius: 10px;
+      padding: 18px;
+      color: #eef;
+    }
+    #slots-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    #slots-title { color: #ffcc00; font-weight: bold; letter-spacing: 1px; }
+    #slots-close {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 4px;
+      color: #eef;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 3px 9px;
+    }
+    #slots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .slot {
+      border: 2px dashed rgba(255,255,255,0.28);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      padding: 12px;
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .slot:hover { border-color: #ffcc00; background: rgba(255,204,0,0.10); }
+    .slot.filled { border-style: solid; border-color: rgba(255,204,0,0.8); }
+    .slot.disabled { opacity: 0.4; cursor: not-allowed; }
+    .slot-index { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1px; }
+    .slot-name { font-size: 14px; font-weight: bold; color: #ffcc00; }
+    .slot-meta { font-size: 11px; color: rgba(210,225,240,0.75); line-height: 1.5; }
+    .slot-empty { font-size: 13px; color: rgba(255,255,255,0.45); margin: auto; }
+    .slot-actions { margin-top: auto; display: flex; gap: 6px; }
+    .slot-action {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 4px;
+      color: #ffcc00;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 10px;
+      padding: 2px 7px;
+    }
+    .slot-action:hover { background: rgba(255,204,0,0.2); }
+    .slot-action.delete {
+      background: rgba(180,40,40,0.18);
+      border-color: rgba(255,90,90,0.55);
+      color: #ff9999;
+    }
+    .slot-action.delete:hover {
+      background: rgba(220,50,50,0.35);
+      border-color: rgba(255,100,100,0.9);
+      color: #fff;
+    }
+    #slots-pager {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255,204,0,0.85);
+    }
+    .pager-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      color: #eef;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 3px 10px;
+    }
+    .pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    #slots-toast {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #ffcc00;
+      min-height: 16px;
+    }
+
+    /* ── In-game save name prompt ── */
+    #save-name-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78);
+      display: none; align-items: center; justify-content: center;
+      z-index: 80; font-family: 'Chewy', cursive;
+    }
+    #save-name-overlay.open { display: flex; }
+    #save-name-panel {
+      width: min(420px, 90vw);
+      background: #000;
+      border: 3px solid #ffcc00;
+      border-radius: 10px;
+      padding: 22px;
+      display: flex; flex-direction: column; gap: 16px;
+      color: #eef;
+    }
+    #save-name-title { font-size: 24px; color: #ffcc00; text-align: center; letter-spacing: 2px; }
+    #save-name-input {
+      font-family: 'Chewy', cursive;
+      font-size: 20px;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      color: #fff;
+      padding: 10px 14px;
+      outline: none;
+    }
+    #save-name-input:focus { border-color: #ffcc00; }
+    #save-name-actions { display: flex; gap: 12px; justify-content: center; }
+    .save-name-btn {
+      font-family: 'Chewy', cursive;
+      font-size: 18px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.35);
+      border-radius: 6px;
+      color: #ffcc00;
+      padding: 8px 22px;
+      cursor: pointer;
+    }
+    .save-name-btn:hover { background: rgba(255,204,0,0.25); }
+    .save-name-btn.primary { border-color: #ffcc00; background: rgba(255,204,0,0.18); }
+    .save-name-btn.primary:hover { background: rgba(255,204,0,0.35); }
+
+
+    /* ── MAIN MENU ── */
+    #main-menu {
+      position: fixed; inset: 0; z-index: 60; display: none;
+      background: #05060a center/cover no-repeat url('icons/game_main.jpg');
+      image-rendering: pixelated;
+    }
+    #main-menu.open { display: block; }
+    #main-menu::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(90deg, rgba(5,6,10,0) 35%, rgba(5,6,10,.75) 100%);
+    }
+    #menu-panel {
+      position: absolute; top: 50%; left: calc(50% + 30px); transform: translateY(-50%);
+      z-index: 2; display: flex; flex-direction: column; gap: 18px;
+      width: min(520px, 62vw);
+    }
+    .menu-btn {
+      font-family: 'Chewy', 'Arial Black', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      padding: 8px 0;
+      text-align: left;
+      color: #888;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      text-shadow: 2px 2px 0 #000;
+      transform-origin: left center;
+      position: relative;
+      align-self: flex-start;
+      width: auto;
+      padding-left: 48px;
+    }
+    .menu-btn::before {
+      content: '>';
+      position: absolute;
+      left: 0;
+      color: #fff;
+      opacity: 0;
+      margin-right: 0;
+    }
+    .menu-btn.selected {
+      color: #fff;
+      font-size: 34px;
+      animation: menu-flicker .9s steps(1,end) infinite;
+    }
+    .menu-btn.selected::before { opacity: 1; }
+    .menu-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .menu-btn:disabled.selected { color: #888; }
+    @keyframes menu-flicker {
+      0%, 100% { opacity: 1; }
+      45% { opacity: 1; }
+      50% { opacity: .45; }
+      60% { opacity: 1; }
+      70% { opacity: .6; }
+      78% { opacity: 1; }
+    }
+    #settings-panel { display: none; flex-direction: column; gap: 12px; }
+    #settings-panel.open { display: flex; }
+    #menu-main.hidden { display: none; }
+    .set-row {
+      display: flex; align-items: center; justify-content: flex-start; gap: 16px; align-self: flex-start;
+      font-size: 20px; color: #888; text-shadow: 2px 2px 0 #000; padding: 8px 0;
+    }
+
+    /* Mobile main-menu adjustments */
+    @media (max-width: 640px) {
+      #main-menu {
+        background-position: 25% center;
+      }
+      #main-menu::after {
+        background: linear-gradient(180deg, rgba(5,6,10,0) 0%, rgba(5,6,10,.55) 55%, rgba(5,6,10,.85) 100%);
+      }
+      #menu-panel {
+        left: 50%;
+        top: auto;
+        bottom: 8vh;
+        transform: translateX(-50%);
+        width: min(340px, 86vw);
+        gap: 10px;
+        align-items: center;
+      }
+      .menu-btn {
+        font-size: 22px;
+        padding-left: 36px;
+        align-self: center;
+      }
+      .menu-btn.selected { font-size: 26px; }
+      .set-row { font-size: 16px; align-self: center; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="interact-hint">[E]</div>
+<div id="objective"><span class="obj-title">OBJECTIVE</span><span id="objective-text"></span></div>
+
+<div id="computer-view">
+  <img id="computer-img" src="assets/computer_screen.png" alt="Computer screen">
+  <button type="button" id="computer-exit">EXIT</button>
+</div>
+<div id="dialog">
+  <img class="dialog-portrait left"  id="portrait-left"  alt="">
+  <img class="dialog-portrait right" id="portrait-right" alt="">
+  <div class="dialog-window">
+    <div class="dialog-nameplate" id="dialog-name"></div>
+    <div class="dialog-text" id="dialog-text"></div>
+    <div class="dialog-choices" id="dialog-choices"></div>
+    <div class="dialog-arrow"></div>
+  </div>
+</div>
+
+<!-- Mobile D-pad -->
+<div id="dpad">
+  <div class="dpad-btn" id="dpad-up">▲</div>
+  <div class="dpad-btn" id="dpad-left">◀</div>
+  <div class="dpad-btn" id="dpad-center"></div>
+  <div class="dpad-btn" id="dpad-right">▶</div>
+  <div class="dpad-btn" id="dpad-down">▼</div>
+</div>
+<div id="btn-e">E</div>
+
+<div id="scene-controls">
+  <button class="scene-btn" id="btn-save" type="button">SAVE</button>
+  <button class="scene-btn" id="btn-load" type="button">LOAD</button>
+</div>
+
+
+<div id="main-menu">
+  <div id="menu-panel">
+    
+    <div id="menu-main" style="display:flex;flex-direction:column;gap:14px">
+      <button class="menu-btn" id="menu-new" type="button">NEW GAME</button>
+      <button class="menu-btn" id="menu-continue" type="button">CONTINUE</button>
+      <button class="menu-btn" id="menu-load" type="button">LOAD</button>
+      <button class="menu-btn" id="menu-settings" type="button">SETTINGS</button>
+    </div>
+    <div id="settings-panel">
+      <label class="set-row"><span>TOUCH CONTROLS</span><input id="set-touch" type="checkbox"></label>
+      <label class="set-row"><span>SHOW [E] HINT</span><input id="set-hint" type="checkbox" checked></label>
+      <button class="menu-btn" id="menu-back" type="button">BACK</button>
+    </div>
+  </div>
+</div>
+
+<div id="slots-overlay">
+  <div id="slots-panel">
+    <div id="slots-header">
+      <div id="slots-title">SAVE GAME</div>
+      <button id="slots-close" type="button">CLOSE</button>
+    </div>
+    <div id="slots-grid"></div>
+    <div id="slots-pager">
+      <button class="pager-btn" id="slots-prev" type="button">◀ PREV</button>
+      <span id="slots-page-label">Page 1 / 10</span>
+      <button class="pager-btn" id="slots-next" type="button">NEXT ▶</button>
+    </div>
+    <div id="slots-toast"></div>
+  </div>
+</div>
+
+<div id="save-name-overlay">
+  <div id="save-name-panel">
+    <div id="save-name-title">NAME THIS SAVE</div>
+    <input id="save-name-input" type="text" placeholder="Save name (optional)" maxlength="32">
+    <div id="save-name-actions">
+      <button class="save-name-btn primary" id="save-name-confirm" type="button">CONFIRM</button>
+      <button class="save-name-btn" id="save-name-cancel" type="button">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>var DEV_MODE = new URLSearchParams(location.search).has("dev");
+window.addEventListener("DOMContentLoaded",function(){if(DEV_MODE){["cell-selector","grid-outputs"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="";});}});</script>
+<div id="dev-tools">
+  <div id="dev-label">DEV MODE — <span id="scene-name">scene-1</span> &nbsp;|&nbsp; Grid: 32×20 &nbsp;|&nbsp; <span id="cell-pos">C0R0</span></div>
+  <div id="cell-selector">
+    <label for="select-cells">
+      <input id="select-cells" type="checkbox">
+      Select Cells
+    </label>
+    <div id="cell-selector-help">Hold and drag across the room grid.</div>
+  </div>
+  <div id="grid-outputs">
+    <div id="grid-outputs-title">Grid Outputs <span id="grid-output-count">(0)</span></div>
+    <div id="grid-outputs-list"><span id="grid-outputs-empty">No cells selected</span></div>
+  </div>
+</div>
+
+<div id="loading-screen">
+  <div id="loading-title">LOADING</div>
+  <div id="load-bar"><div id="load-bar-fill"></div></div>
+  <div id="load-pct">0%</div>
+</div>
+
+<div id="scene-fade"></div>
+
+<script>
+  // Load order matters: state -> episode data -> engine -> save/load.
+  (function () {
+    var v = Date.now();
+    ['game-state.js', 'episode-01.js', 'engine.js', 'save-load.js'].forEach(function (src) {
+      document.write('<scr' + 'ipt src="' + src + '?v=' + v + '"><\/scr' + 'ipt>');
+    });
+  })();
+</script>
+<script>
+  // Kick off if images somehow all cached instantly
+  if (typeof TOTAL_ASSETS === 'number' && assetsLoaded >= TOTAL_ASSETS && !gameStarted) {
+    gameStarted = true; startGame();
+  }
+</script>
+</body>
+</html>
