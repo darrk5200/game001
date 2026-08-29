@@ -230,6 +230,7 @@ function runStep(s, next) {
   if (s.actorTo) { moveActor(s.actorTo.id, [s.actorTo.to], next); return; }
   if (s.actorPath) { moveActor(s.actorPath.id, s.actorPath.path, next); return; }
   if (s.setSprite) { const a = getActor(s.setSprite.id); if (a) a.sprite = s.setSprite.sprite; next(); return; }
+  if (s.setPropSprite) { const p = (scene.props || []).find(prop => prop.cell === s.setPropSprite.cell); if (p) p.sprite = s.setPropSprite.sprite; next(); return; }
   if (s.removeActor) { removeActor(s.removeActor); next(); return; }
   if (s.objective) { setObjective(s.objective); next(); return; }
   if (s.flags) { Object.assign(FLAGS, s.flags); next(); return; }
