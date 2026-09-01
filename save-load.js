@@ -85,6 +85,7 @@ function captureState() {
       row: CELL_H ? a.y / CELL_H : 0,
     })),
     dialog: dialog,
+    objectives: (typeof captureObjectiveState === 'function') ? captureObjectiveState() : null,
     savedAt: Date.now(),
   };
 }
@@ -128,6 +129,8 @@ function applyState(state) {
   if (state.dialog && typeof restoreDialogState === 'function') {
     restoreDialogState(state.dialog);
   }
+  // Objectives are restored last so a replayed dialogue page cannot override them.
+  if (typeof restoreObjectiveState === 'function') restoreObjectiveState(state.objectives);
   updateDevLabel();
 }
 
@@ -259,12 +262,13 @@ function renderSlots() {
       deleteBtn.addEventListener('click', e => {
         e.stopPropagation();
         const saveName = data.name ? `"${data.name}"` : `slot ${index + 1}`;
-        if (!confirm(`Are you sure you want to delete ${saveName}?\n\nThis cannot be undone.`)) return;
-        const all = readSaves();
-        delete all[index];
-        writeSaves(all);
-        renderSlots();
-        showToast(`Slot ${index + 1} deleted.`);
+        openConfirm('DELETE SAVE', `Are you sure you want to delete ${saveName}?\n\nThis cannot be undone.`, () => {
+          const all = readSaves();
+          delete all[index];
+          writeSaves(all);
+          renderSlots();
+          showToast(`Slot ${index + 1} deleted.`);
+        });
       });
       actions.appendChild(deleteBtn);
 
@@ -278,8 +282,11 @@ function renderSlots() {
 
     slot.addEventListener('click', () => {
       if (slotsMode === 'save') {
-        if (data && !confirm(`Overwrite slot ${index + 1}?`)) return;
         const suggested = data && data.name ? data.name : '';
+        if (data) {
+          openConfirm('OVERWRITE SAVE', `Overwrite slot ${index + 1}?`, () => openSaveNamePrompt('save', index, suggested));
+          return;
+        }
         openSaveNamePrompt('save', index, suggested);
       } else {
         if (!data) return;
@@ -305,6 +312,41 @@ function openSlots(mode) {
 function closeSlots() {
   slotsOverlay.classList.remove('open');
 }
+
+// In-game confirmation dialog
+var confirmOverlay = document.getElementById('confirm-overlay');
+var confirmTitleEl = document.getElementById('confirm-title');
+var confirmMessageEl = document.getElementById('confirm-message');
+var confirmAction = null;
+
+function openConfirm(title, message, onYes) {
+  confirmAction = onYes;
+  confirmTitleEl.textContent = title;
+  confirmMessageEl.textContent = message;
+  confirmOverlay.style.display = 'flex';
+}
+
+function closeConfirm() {
+  confirmOverlay.style.display = 'none';
+  confirmAction = null;
+}
+
+document.getElementById('confirm-yes').addEventListener('click', () => {
+  const fn = confirmAction;
+  closeConfirm();
+  if (fn) fn();
+});
+document.getElementById('confirm-no').addEventListener('click', closeConfirm);
+confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) closeConfirm(); });
+window.addEventListener('keydown', e => {
+  if (confirmOverlay.style.display !== 'flex') return;
+  if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); closeConfirm(); }
+  else if (e.code === 'Enter') {
+    e.preventDefault(); e.stopPropagation();
+    const fn = confirmAction; closeConfirm(); if (fn) fn();
+  }
+}, true);
+
 
 function openSaveNamePrompt(mode, index, suggestedName) {
   saveNameMode = mode;
