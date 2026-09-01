@@ -453,6 +453,38 @@ function setObjective(text) {
   positionObjective();
 }
 
+// An objective already completed this playthrough must never pop back up
+// (e.g. when a save restores a dialogue page that originally set it).
+function objectiveDone(text) {
+  return OBJECTIVES.some(o => o.text === text && o.done);
+}
+function setObjectiveOnce(text) {
+  if (!text || objectiveDone(text)) return;
+  setObjective(text);
+}
+
+function captureObjectiveState() {
+  return { current: CURRENT_OBJECTIVE, list: OBJECTIVES.map(o => ({ text: o.text, done: !!o.done, at: o.at })) };
+}
+function restoreObjectiveState(snapshot) {
+  OBJECTIVES.length = 0;
+  const list = (snapshot && Array.isArray(snapshot.list)) ? snapshot.list : [];
+  list.forEach(o => OBJECTIVES.push({ text: o.text, done: !!o.done, at: o.at || Date.now() }));
+  const current = (snapshot && snapshot.current) || '';
+  CURRENT_OBJECTIVE = current;
+  if (!objectiveEl) return;
+  if (!current) { objectiveEl.classList.remove('show'); return; }
+  objectiveTextEl.textContent = current;
+  objectiveEl.classList.add('show');
+  positionObjective();
+}
+function clearObjectives() {
+  OBJECTIVES.length = 0;
+  setObjective('');
+}
+window.captureObjectiveState = captureObjectiveState;
+window.restoreObjectiveState = restoreObjectiveState;
+
 
 
 function positionSceneControls() {
@@ -1013,7 +1045,7 @@ function showDialogPage(index) {
   renderPortrait(currentSpeaker, page.sprite);
   positionDialog();
   clearChoices();
-  if (page.objective) setObjective(page.objective);
+  if (page.objective) setObjectiveOnce(page.objective);
   if (page.completeObjective) { setObjective(''); FLAGS.objective_1 = true; }
   typeLine(page.text || '', () => {
     if (page.choices && page.choices.length) showChoices(page.choices);
@@ -1030,7 +1062,7 @@ function showDialogPageInstant(index, savedChoiceIndex) {
   renderPortrait(currentSpeaker, page.sprite);
   positionDialog();
   clearChoices();
-  if (page.objective) setObjective(page.objective);
+  if (page.objective) setObjectiveOnce(page.objective);
   if (page.completeObjective) { setObjective(''); FLAGS.objective_1 = true; }
   dialogTextEl.textContent = page.text || '';
   dialogEl.classList.add('ready');
@@ -1224,10 +1256,11 @@ function updateInteractHint() {
     const sy = offsetY + player.y * scale;
     hint.style.left = sx + 'px';
     hint.style.top  = (sy - CHAR_H * scale * 0.8) + 'px';
-    hint.style.display = 'block';
+    hint.style.display = 'flex';
   } else {
     hint.style.display = 'none';
   }
+
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1472,6 +1505,7 @@ function startPlaying() {
 
 document.getElementById('menu-new').addEventListener('click', () => {
   SEEN.clear();
+  if (typeof clearObjectives === "function") clearObjectives();
   Object.keys(CHOICES).forEach(k => delete CHOICES[k]);
   Object.keys(FLAGS).forEach(k => delete FLAGS[k]);
   ACTORS.length = 0;
