@@ -13,7 +13,8 @@ const EPISODE_01_SCENES = {};
 EPISODE_01_SCENES['scene-1'] = {
     background: 'assets/room1.png',
     spawn: { col: 10, row: 10 },
-    walkable: "C14R8C15R8C16R8C17R8C14R9C15R9C16R9C17R9C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C10R11C11R11C12R11C13R11C14R11C15R11C16R11C17R11C10R12C11R12C12R12C13R12C14R12C15R12C16R12C17R12C10R13C11R13C12R13C13R13C14R13C15R13C16R13C17R13C10R14C11R14C12R14C13R14C14R14C15R14C16R14C17R14C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C8R12C9R12C8R13C9R13C8R14C9R14C8R15C9R15C3R12C4R12C5R12C6R12C7R12C3R13C4R13C5R13C6R13C7R13C12R16C13R16C14R16C15R16C16R16C17R16C18R16C18R10C19R10C18R11C19R11C18R12C19R12C18R13C19R13C18R14C19R14C18R15C19R15C25R10C25R11C25R12C25R13C25R14C25R15C19R10",
+    walkable: "C14R8C15R8C16R8C17R8C14R9C15R9C16R9C17R9C10R10C11R10C12R10C13R10C14R10C15R10C16R10C17R10C10R11C11R11C12R11C13R11C14R11C15R11C16R11C17R11C10R12C11R12C12R12C13R12C14R12C15R12C16R12C17R12C18R12C19R12C20R12C21R12C22R12C23R12C24R12C25R12C10R13C11R13C12R13C13R13C14R13C15R13C16R13C17R13C18R13C19R13C20R13C21R13C22R13C23R13C24R13C25R13C10R14C11R14C12R14C13R14C14R14C15R14C16R14C17R14C18R14C19R14C20R14C21R14C22R14C23R14C24R14C25R14C10R15C11R15C12R15C13R15C14R15C15R15C16R15C17R15C18R15C19R15C20R15C21R15C22R15C23R15C24R15C25R15C26R15C23R11C24R11C25R11C8R12C9R12C8R13C9R13C8R14C9R14C8R15C9R15C3R12C4R12C5R12C6R12C7R12C3R13C4R13C5R13C6R13C7R13C12R16C13R16C14R16C15R16C16R16C17R16C18R16C18R10C19R10C18R11C19R11C18R12C19R12C18R13C19R13C18R14C19R14C18R15C19R15C25R10C25R11C25R12C25R13C25R14C25R15C19R10",
+
 
     // Interact-cells: standing on any cell in `cells` shows the interact icon
     // at the `icon` cell. Press E to open that interaction's dialogue.
@@ -43,8 +44,23 @@ EPISODE_01_SCENES['scene-1'] = {
           { speaker: "narrator", text: "You do not feel like dressing fancy today" },
         ],
       },
+      // Drawer (secret envelope)
+      {
+        cells: "C11R10C12R10",
+        icon: "C11R8",
+        once: true,
+        lines: [
+          { speaker: "narrator", text: "A secret envelope inside the drawer" },
+          { speaker: "narrator", text: "You keep your hard-earned part time job money here" },
+          { speaker: "narrator", text: "Nobody knows about this envelope" },
+          { speaker: "july", text: "Forty short, forty short." },
+          { speaker: "july", text: "Dammit, did she take that?" },
+          { speaker: "narrator", text: "Nobody knows about this envelope, aside from your dearest, apparently" },
+        ],
+      },
       // Doorway to roomways
       { cells: "C15R16C16R16", icon: "C18R2", goto: "scene-1.5", at: 'C6R15' },
+
     ],
 };
 
@@ -160,20 +176,29 @@ EPISODE_01_SCENES['scene-3'] = {
   ],
   interacts: [
     // Doorway back to the common room
-    { cells: "C3R11", icon: "C3R9", goto: 'scene-2', at: 'C20R11' },
+    { cells: "C3R11", icon: "C3R9", goto: 'scene-2', at: 'C27R11' },
     // Doorway to the bathroom
     { cells: "C15R16C16R16", icon: "C15R14", goto: 'scene-3.5', at: 'C15R16' },
     // June notices July from the counter
     {
-      cells: "C8R8",
+      cells: "C8R8C6R9C7R9C8R9",
       icon: "C8R6",
       script: [
+        { playerTo: 'C9R8' },
         { setPropSprite: { cell: 'C6R8', sprite: 'june_right' } },
         {
           dialog: [
-            { speaker: 'june', sprite: 'june_upset', text: "July.. noooo.. *sniff sniff*" },
-            { speaker: 'july', text: "What?" },
+            { speaker: 'june', sprite: 'june_upset', text: "July.. noooo.. *sniff sniff*", completeObjective: true },
+            { speaker: 'july', sprite: 'july_idle', text: "What?" },
             { speaker: 'june', sprite: 'june_idle-a', text: "M-my vanilla cake.. turned into a chocolate one" },
+            { speaker: 'july', sprite: 'july_idle', text: "magic, huh" },
+            { speaker: 'june', sprite: 'june_idle-a', text: "and how did this magic happen? I swear I left a vanilla cake here" },
+            { speaker: 'july', sprite: 'july_idle', text: "Well, we had guests over. They cast magic on it." },
+            { speaker: 'june', sprite: 'june_idle-a', text: "Oh, who?" },
+            { speaker: 'june', sprite: 'june_upset', text: "Wait, let me guess. Was it Aunt Olive again?" },
+            { speaker: 'july', sprite: 'july_idle', text: "Bingo. 10 points." },
+            { speaker: 'narrator', text: "Because who would've guessed? The only person who checks up on this family checked up on this family." },
+            { speaker: 'narrator', text: "For whatever reasons they may be." },
           ],
         },
       ],
