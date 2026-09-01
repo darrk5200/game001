@@ -10,6 +10,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #111; overflow: hidden; }
+    /* ── Custom pixel cursors ── */
+    html, body, * { cursor: url("icons/cursor-default.png") 4 2, default; }
     #canvas { display: block; image-rendering: pixelated; touch-action: none; }
     #canvas.cell-selecting { cursor: crosshair; }
 
@@ -47,13 +49,17 @@
       color: #fff;
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      padding: 6px 12px;
-      border: 2px solid #ffcc00;
+      width: 32px;
+      height: 32px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #888888;
       border-radius: 4px;
       pointer-events: none;
-      display: none;
       z-index: 10;
     }
+
 
     /* ── RPGMaker-style dialog window (anchored inside the game canvas) ── */
     #dialog {
@@ -62,7 +68,7 @@
       z-index: 20;
       font-family: 'Courier New', monospace;
       color: #f2f4ff;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       -webkit-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -183,7 +189,7 @@
       border-radius: 5px;
       padding: 6px 18px;
       letter-spacing: 1px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       text-align: left;
       text-shadow: 0 2px 0 rgba(0,0,0,0.7);
       flex: 0 0 auto;
@@ -221,7 +227,7 @@
       justify-content: center;
       font-size: 18px;
       color: rgba(255,255,255,0.8);
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -242,8 +248,8 @@
       right: 24px;
       width: 54px;
       height: 54px;
-      background: rgba(102,153,204,0.25);
-      border: 2px solid rgba(102,153,204,0.6);
+      background: rgba(120,120,130,0.25);
+      border: 2px solid rgba(150,150,160,0.7);
       border-radius: 50%;
       display: none;
       align-items: center;
@@ -252,7 +258,7 @@
       font-size: 18px;
       font-weight: bold;
       color: #fff;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       z-index: 15;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
@@ -289,7 +295,7 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       color: #fff;
       font-weight: bold;
     }
@@ -298,7 +304,7 @@
       height: 14px;
       margin: 0;
       accent-color: #66ccff;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
     }
     #cell-selector-help {
       margin-top: 5px;
@@ -393,7 +399,7 @@
       font-weight: bold;
       letter-spacing: 1px;
       padding: 0 22px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
     }
     .scene-btn:hover { background: rgba(40,70,120,0.95); color: #fff; }
 
@@ -441,7 +447,7 @@
       font-weight: bold;
       letter-spacing: 2px;
       padding: 10px 24px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
     }
     #computer-exit:hover { background: rgba(40,70,120,0.95); color: #fff; }
     #slots-panel {
@@ -466,7 +472,7 @@
       border: 1px solid rgba(255,255,255,0.4);
       border-radius: 4px;
       color: #eef;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       font-family: inherit;
       padding: 3px 9px;
     }
@@ -485,7 +491,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
     }
     .slot:hover { border-color: #ffcc00; background: rgba(255,204,0,0.10); }
     .slot.filled { border-style: solid; border-color: rgba(255,204,0,0.8); }
@@ -500,7 +506,7 @@
       border: 1px solid rgba(255,255,255,0.25);
       border-radius: 4px;
       color: #ffcc00;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       font-family: inherit;
       font-size: 10px;
       padding: 2px 7px;
@@ -530,7 +536,7 @@
       border: 1px solid rgba(255,255,255,0.3);
       border-radius: 4px;
       color: #eef;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       font-family: inherit;
       padding: 3px 10px;
     }
@@ -580,7 +586,7 @@
       border-radius: 6px;
       color: #ffcc00;
       padding: 8px 22px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
     }
     .save-name-btn:hover { background: rgba(255,204,0,0.25); }
     .save-name-btn.primary { border-color: #ffcc00; background: rgba(255,204,0,0.18); }
@@ -608,7 +614,7 @@
       font-size: 28px;
       font-weight: 700;
       letter-spacing: 2px;
-      cursor: pointer;
+      cursor: url("icons/cursor-pointer.png") 6 2, pointer;
       padding: 8px 0;
       text-align: left;
       color: #888;
@@ -758,6 +764,17 @@
     <div id="save-name-actions">
       <button class="save-name-btn primary" id="save-name-confirm" type="button">CONFIRM</button>
       <button class="save-name-btn" id="save-name-cancel" type="button">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:100;">
+  <div style="background:#12121a;border:3px solid #555;padding:28px 32px;max-width:420px;display:flex;flex-direction:column;gap:18px;">
+    <div id="confirm-title" style="font-size:22px;color:#ffcc00;text-align:center;letter-spacing:2px;">CONFIRM</div>
+    <div id="confirm-message" style="text-align:center;color:#e8e8e8;line-height:1.5;white-space:pre-line;font-size:14px;"></div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="save-name-btn primary" id="confirm-yes" type="button">YES</button>
+      <button class="save-name-btn" id="confirm-no" type="button">NO</button>
     </div>
   </div>
 </div>
